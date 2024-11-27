@@ -2,62 +2,50 @@ import socket
 import threading
 
 class Peer:
-	def __init__(self, host, port):
-		self.host = host
-		self.port = port
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.connections = []
-        
-def connect(self, peer_host, peer_port):
-    try:
-        connection = self.socket.connect((peer_host, peer_port))
-        self.connections.append(connection)
-        print("Connected to other Player!")
-    except socket.error as e:
-        print("Failed! Figure out what's wrong!")
-        
-def listen(self):
-    self.socket.bind((self.host, self.port))
-    self.socket.listen(10)
-    print("Listening, Listening...")
-    
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.bind((self.host, self.port))
+        self.socket.listen(5)
+        self.connections = []
+
+    def start_listening(self):
+        while True:
+            conn, addr = self.socket.accept()
+            self.connections.append(conn)
+            print(f"Connection from {addr}")
+            threading.Thread(target=self.handle_connection, args=(conn,)).start()
+
+    def handle_connection(self, conn):
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            print(f"Received: {data.decode()}")
+            conn.sendall(b"Message received")
+
+    def connect_to_peer(self, host, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((host, port))
+        self.connections.append(sock)
+        print(f"Connected to {host}:{port}")
+
+    def send_message(self, message):
+        for conn in self.connections:
+            conn.sendall(message.encode())
+
+if __name__ == "__main__":
+    # Create a peer
+    peer1 = Peer("localhost", 5000)
+
+    # Start listening for connections
+    threading.Thread(target=peer1.start_listening).start()
+
+    # Connect to another peer (if available)
+    peer1.connect_to_peer("localhost", 5001)
+
+    # Send messages
     while True:
-        connection, address = self.socket.accept()
-        self.connections.append(connection)
-        print("Connected! Good job!")
-        
-def send_data(self, data):
-    for connection in self.connections:
-        try:
-            connection.sendall(data.encode())
-        except socket.error as e:
-            print("Failed! Cause? {e}")
-            
-def start(self):
-    listen_thread = threading.Thread(target = self.listen)
-    listen_thread.start()
-    
-def listener():
-    name = input("Enter hostname: ")
-    port = int(input("Enter the port you would like to connect on: "))
-
-    a = Peer(name, port)
-    print("Hello " + name + "!")
-
-    listen(a)
-    
-def connector():
-    name = input("Enter hostname of Player you would like to play with: ")
-    port = int(input("Enter the port you would like to connect to: "))
-    
-    b = Peer(name, port)
-    print("Hello " + name + "!")
-    
-    connect(b, name, port)
-    
-choice = input("Are you starting the connection or connecting to one already in place? Start or Connect: ")
-
-if choice == "Start":
-    listener()
-elif choice == "Connect":
-    connector()
+        message = input("Enter message: ")
+        peer1.send_message(message)
