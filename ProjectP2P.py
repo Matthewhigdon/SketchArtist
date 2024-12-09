@@ -44,3 +44,6 @@ if __name__ == "__main__":
 
     # Connect to another peer (if available)
     peer1.connect_to_peer("localhost", 5000)
+
+    while True:
+        peer1.send_message(input("Please State your message: "))
