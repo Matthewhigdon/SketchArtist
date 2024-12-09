@@ -96,17 +96,6 @@ class NotepadApp:
 
         run_timer(1)  # Start the first round
 
-
-
-
-
-
-
-
-
-
-
-
 # Run the Application
 if __name__ == "__main__":
     root = tk.Tk()

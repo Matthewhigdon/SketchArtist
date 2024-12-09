@@ -1,6 +1,25 @@
 import tkinter as tk
 from tkinter import PhotoImage
 import subprocess
+from types import new_class
+import SketchArtistUI
+
+class player:
+    def __init__(self, player_number, role):
+        self.player_number = player_number
+        self.role = role
+
+    def get_role(self):
+        return self.role
+
+    def set_role(self, role):
+        self.role = role
+
+    def get_player_number(self):
+        return self.player_number
+
+    def set_player_number(self, player_number):
+        self.player_number = player_number
 
 def run_login_script():
     try:
@@ -14,35 +33,47 @@ def run_login_script():
         output_text.insert(tk.END, f"Error: {e}")
 
 def set_player_role():
+    print("hit")
     players = []
     num_players = Lb.curselection()[0]
 
-    while num_players > 0:
-        new_player = "player" + str(num_players)
+    while num_players > 1:
+        new_player = player(num_players, "suspect")
         players.append(new_player)
         num_players -= 1
+    if num_players == 1:
+        new_player = player(num_players, "witness")
+        players.append(new_player)
+        num_players -= 1
+    if num_players == 0:
+        new_player = player(num_players, "artist")
+        players.append(new_player)
 
- """   if len(players) == 2:
-        player1 = artist
-        player2 = suspect
-    else:
-        player1 = artist
-        player2 = witness
-        for x in players:
-            x = suspect
+    for x in players:
+        if x.role == "artist":
+            run_artist()
+        if x.role == "suspect":
+            run_suspect()
+        if x.role == "witness":
+            run_witness()
 
-def run_artist(){
+def run_artist():
+    root_a = tk.Tk()
+    app = SketchArtistUI.NotepadApp(root_a)
+    root_a.geometry("800x600")
+    root_a.mainloop()
+def run_witness():
+    root_w = tk.Tk()
+    app = SketchArtistUI.NotepadApp(root_w)
+    root_w.geometry("800x600")
+    root_w.mainloop()
 
-}
+def run_suspect():
+    root_s = tk.Tk()
+    app = SketchArtistUI.NotepadApp(root_s)
+    root_s.geometry("800x600")
+    root_s.mainloop()
 
-def run_witness(){
-
-}
-
-def run_suspect(){
-
-}
-"""
 # Create the main window
 root = tk.Tk()
 root.title("Python File Runner")
@@ -51,7 +82,6 @@ root.title("Python File Runner")
 bg_image = PhotoImage(file="assets/UI Background.png")
 bg_label = tk.Label(root, image=bg_image)
 bg_label.place(relwidth=1, relheight=1)
-
 
 logo_image = PhotoImage(file="assets/MainLogo.png")
 logo_label = tk.Label(root, image=logo_image, bg="white")
