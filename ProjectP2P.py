@@ -43,9 +43,4 @@ if __name__ == "__main__":
     threading.Thread(target=peer1.start_listening).start()
 
     # Connect to another peer (if available)
-    peer1.connect_to_peer("localhost", 5001)
-
-    # Send messages
-    while True:
-        message = input("Enter message: ")
-        peer1.send_message(message)
+    peer1.connect_to_peer("localhost", 5000)
