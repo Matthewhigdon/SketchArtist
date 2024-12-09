@@ -76,8 +76,12 @@ class DetectiveApp:
     def handle_submit(self):
         # Get the text from the entry field
         guess = self.text_entry.get()
-        print(f"Submitted guess: {guess}")  # Replace with desired action
-        self.text_entry.delete(0, tk.END)  # Clear the entry field
+
+
+
+        
+
+        self.text_entry.delete(0, tk.END) # Clear the entry field
 
     def update_timer(self):
         total_rounds = 5
