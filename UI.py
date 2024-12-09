@@ -58,18 +58,18 @@ def set_player_role():
             run_witness()
 
 def run_artist():
-    root_a = tk.Tk()
+    root_a = tk.Toplevel()
     app = SketchArtistUI.NotepadApp(root_a)
     root_a.geometry("800x600")
     root_a.mainloop()
 def run_witness():
-    root_w = tk.Tk()
+    root_w = tk.Toplevel()
     app = SketchArtistUI.NotepadApp(root_w)
     root_w.geometry("800x600")
     root_w.mainloop()
 
 def run_suspect():
-    root_s = tk.Tk()
+    root_s = tk.Toplevel()
     app = SketchArtistUI.NotepadApp(root_s)
     root_s.geometry("800x600")
     root_s.mainloop()
