@@ -2,12 +2,15 @@ import tkinter as tk
 from tkinter import PhotoImage
 import subprocess
 import SketchArtistUI
+import WitnessUI
+import DetectiveIU
 
 
 class player:
-    def __init__(self, player_number, role):
+    def __init__(self, player_number, role, is_culprit):
         self.player_number = player_number
         self.role = role
+        self.is_culprit = is_culprit
 
     def get_role(self):
         return self.role
@@ -20,6 +23,12 @@ class player:
 
     def set_player_number(self, player_number):
         self.player_number = player_number
+
+    def get_is_culprit(self):
+        return self.is_culprit
+
+    def set_is_culprit(self, is_culprit):
+        self.is_culprit = is_culprit
 
 
 def run_login_script():
@@ -35,22 +44,22 @@ def run_login_script():
 
 
 def set_player_role():
-    print("hit")
     players = []
 
     # Get the selected number of players from Listbox (adjusted for 1-based index)
-    num_players = Lb.curselection()[0] + 1  # Listbox selections are 0-based, so add 1 to get correct player count
+    num_players = Lb.curselection()[0]# Listbox selections are 0-based, so add 1 to get correct player count
 
+    print(num_players)
     while num_players > 1:
-        new_player = player(num_players, "suspect")
+        new_player = player(num_players, "suspect", False)
         players.append(new_player)
         num_players -= 1
     if num_players == 1:
-        new_player = player(num_players, "witness")
+        new_player = player(num_players, "witness", False)
         players.append(new_player)
         num_players -= 1
     if num_players == 0:
-        new_player = player(num_players, "artist")
+        new_player = player(num_players, "artist", False)
         players.append(new_player)
 
     for x in players:
@@ -71,58 +80,58 @@ def run_artist():
 
 def run_witness():
     root_w = tk.Toplevel()
-    app = SketchArtistUI.NotepadApp(root_w)
+    app = WitnessUI.WitnessApp(root_w)
     root_w.geometry("800x600")
     root_w.mainloop()
 
 
 def run_suspect():
     root_s = tk.Toplevel()
-    app = SketchArtistUI.NotepadApp(root_s)
+    app = DetectiveIU.DetectiveApp(root_s)
     root_s.geometry("800x600")
     root_s.mainloop()
 
+if __name__ == "__main__":
+    # Create the main window
+    root = tk.Tk()
+    root.title("Python File Runner")
+    root.geometry("800x600")
 
-# Create the main window
-root = tk.Tk()
-root.title("Python File Runner")
-root.geometry("800x600")
+    # Set a custom background image
+    bg_image = PhotoImage(file="assets/UI Background.png")
+    bg_label = tk.Label(root, image=bg_image)
+    bg_label.place(relwidth=1, relheight=1)
 
-# Set a custom background image
-bg_image = PhotoImage(file="assets/UI Background.png")
-bg_label = tk.Label(root, image=bg_image)
-bg_label.place(relwidth=1, relheight=1)
+    # Frame to hold the logo and the dropdown (Listbox)
+    top_frame = tk.Frame(root, bg="white")
+    top_frame.pack(pady=10)
 
-# Frame to hold the logo and the dropdown (Listbox)
-top_frame = tk.Frame(root, bg="white")
-top_frame.pack(pady=10)
+    # Logo Image
+    logo_image = PhotoImage(file="assets/MainLogo.png")
+    logo_label = tk.Label(top_frame, image=logo_image, bg="white")
+    logo_label.pack(side=tk.LEFT, padx=10)  # Place logo on the left side
 
-# Logo Image
-logo_image = PhotoImage(file="assets/MainLogo.png")
-logo_label = tk.Label(top_frame, image=logo_image, bg="white")
-logo_label.pack(side=tk.LEFT, padx=10)  # Place logo on the left side
+    # Listbox (Dropdown) next to the logo
+    Lb = tk.Listbox(top_frame, height=6, width=20, font=("Helvetica", 14))
+    Lb.insert(1, '1 player')
+    Lb.insert(2, '2 players')
+    Lb.insert(3, '3 players')
+    Lb.insert(4, '4 players')
+    Lb.insert(5, '5 players')
+    Lb.insert(6, '6 players')
+    Lb.pack(side=tk.LEFT, padx=10)  # Place the Listbox next to the logo
 
-# Listbox (Dropdown) next to the logo
-Lb = tk.Listbox(top_frame, height=6, width=20, font=("Helvetica", 14))
-Lb.insert(1, '1 player')
-Lb.insert(2, '2 players')
-Lb.insert(3, '3 players')
-Lb.insert(4, '4 players')
-Lb.insert(5, '5 players')
-Lb.insert(6, '6 players')
-Lb.pack(side=tk.LEFT, padx=10)  # Place the Listbox next to the logo
+    # Start Button
+    start_button = tk.Button(root, text="Start", command=set_player_role,
+                             font=("Helvetica", 20, "bold"),
+                             bg="green",
+                             fg="white",
+                             padx=50, pady=20,
+                             relief="raised")
+    start_button.pack(pady=20)
 
-# Start Button
-start_button = tk.Button(root, text="Start", command=set_player_role,
-                         font=("Helvetica", 20, "bold"),
-                         bg="green",
-                         fg="white",
-                         padx=50, pady=20,
-                         relief="raised")
-start_button.pack(pady=20)
+    # Output text box
+    output_text = tk.Text(root, height=10, width=50)
+    output_text.pack(padx=20, pady=10)
 
-# Output text box
-output_text = tk.Text(root, height=10, width=50)
-output_text.pack(padx=20, pady=10)
-
-root.mainloop()
+    root.mainloop()

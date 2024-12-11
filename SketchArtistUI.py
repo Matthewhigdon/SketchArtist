@@ -86,21 +86,6 @@ class NotepadApp:
         )
         subtitle.pack()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #the timer has 5 rounds, counts down 60 seconds in black then 10 seconds in blue
     #the blue timer is for people who are still guessing
     def update_timer(self):
@@ -147,4 +132,3 @@ if __name__ == "__main__":
     app = NotepadApp(root)
     root.geometry("800x600")
     root.mainloop()
-

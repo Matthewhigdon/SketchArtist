@@ -5,8 +5,8 @@ import json
 import random
 
 HOST = '127.0.0.1'  # or use your LAN IP to allow local network connections
-PORT = 5000
-TOTAL_PLAYERS = 4  # Example: 1 Witness, 1 Sketch Artist, 2 Detectives
+PORT = 50000
+TOTAL_PLAYERS = 2  # Example: 1 Witness, 1 Sketch Artist, 2 Detectives
 ROUND_COUNT = 5
 ROUND_DURATION = 60
 PAUSE_DURATION = 10

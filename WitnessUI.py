@@ -1,7 +1,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import time
-from UI import Lb  # Import the Listbox declared in UI.py
+import UI
 
 class WitnessApp:
     def __init__(self, root):
@@ -20,9 +20,6 @@ class WitnessApp:
 
         # Text Entry Box
         self.add_text_entry()
-
-        # Listbox Integration
-        self.integrate_listbox()
 
         # Starts timer
         self.update_timer()
@@ -82,19 +79,14 @@ class WitnessApp:
         guess = self.text_entry.get()
         print(f"Submitted description: {guess}")  # Replace with desired action
         self.text_entry.delete(0, tk.END)  # Clear the entry field
+    def update_culprit(self):
+        selected_items = UI.Lb.curselection()
+        if selected_items:
+            culprit_name = UI.Lb.get(selected_items[0])
+            self.subtitle.config(text=f"the culprit is: {culprit_name}")
+        else:
+            self.subtitle.config(text="the culprit is: None")
 
-    def integrate_listbox(self):
-        # Monitor selection changes in the Listbox from UI.py
-        def update_culprit(*args):
-            selected_items = Lb.curselection()
-            if selected_items:
-                culprit_name = Lb.get(selected_items[0])
-                self.subtitle.config(text=f"the culprit is: {culprit_name}")
-            else:
-                self.subtitle.config(text="the culprit is: None")
-
-        # Attach the callback to the Listbox selection event
-        Lb.bind("<<ListboxSelect>>", update_culprit)
 
     def update_timer(self):
         total_rounds = 5

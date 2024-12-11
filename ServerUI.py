@@ -5,6 +5,8 @@ import threading
 import json
 import subprocess
 
+from PIL.ImageTk import PhotoImage
+
 # Import the role-specific UIs
 # Make sure these files expose classes like DetectiveApp, NotepadApp, WitnessApp
 from DetectiveIU import DetectiveApp
@@ -12,7 +14,7 @@ from SketchArtistUI import NotepadApp  # Assuming NotepadApp is the artist UI
 from WitnessUI import WitnessApp
 
 HOST = '127.0.0.1'  # Host IP for connecting to or hosting a server
-PORT = 5000  # Port must match the server
+PORT = 50000  # Port must match the server
 
 
 class GameClient:
@@ -95,7 +97,7 @@ class GameClient:
 def start_server(num_players):
     # Start the server in a separate process
     # Requires that Main.py is set up as a server with TOTAL_PLAYERS = num_players
-    subprocess.Popen(["python", "Main.py"])
+    subprocess.Popen(["python", "ServerMain.py"])
 
 
 class MainUI:
@@ -191,5 +193,10 @@ if __name__ == "__main__":
 
     root = tk.Tk()
     root.geometry("800x600")
+
+    bg_image = PhotoImage(file="assets/UI Background.png")
+    bg_label = tk.Label(root, image=bg_image)
+    bg_label.place(relwidth=1, relheight=1)
+
     MainUI(root)
     root.mainloop()
