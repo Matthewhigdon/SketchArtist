@@ -6,7 +6,7 @@ import time
 
 # Simulate the external method that provides timer value
 def fetch_timer_value():
-    # Example: Increment a counter every second
+
     timer_value = 0
     while True:
         yield timer_value
@@ -15,7 +15,7 @@ def fetch_timer_value():
 
 
 
-# The Notepad Class (Drawable Canvas)
+# the notepad
 class Notepad(Canvas):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)

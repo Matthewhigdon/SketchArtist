@@ -46,7 +46,7 @@ class WitnessApp:
         )
         title.pack()
 
-        # Subtitle (dynamic based on Listbox selection)
+
         self.subtitle = tk.Label(
             self.instruction_frame,
             text="the culprit is: None",

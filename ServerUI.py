@@ -4,29 +4,39 @@ import socket
 import threading
 import json
 import subprocess
-
+import time
+import os
 from PIL.ImageTk import PhotoImage
 
-# Import the role-specific UIs
-# Make sure these files expose classes like DetectiveApp, NotepadApp, WitnessApp
 from DetectiveIU import DetectiveApp
-from SketchArtistUI import NotepadApp  # Assuming NotepadApp is the artist UI
+from SketchArtistUI import NotepadApp
 from WitnessUI import WitnessApp
 
-HOST = '127.0.0.1'  # Host IP for connecting to or hosting a server
-PORT = 50000  # Port must match the server
-
+# If you are hosting locally, use localhost. If another machine is joining, use the host machine's LAN IP.
+HOST = '10.20.193.115'  # Host IP for connecting as client; if joining from another machine, replace with host LAN IP
+PORT = 50000
 
 class GameClient:
     def __init__(self, role_ui_callback):
         self.sock = None
         self.role_ui_callback = role_ui_callback
         self.listen_thread = None
+        self.current_ui = None
 
     def connect_to_server(self, host, port):
+        print(f"Attempting to connect to server at {host}:{port}...")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
-        # Start a thread to listen for server messages
+        self.sock.settimeout(30)  # 5-second timeout for debugging
+        try:
+            self.sock.connect((host, port))
+            print("Connected to server successfully.")
+        except socket.timeout:
+            print("Connection timed out. The server did not respond.")
+            return
+        except socket.error as e:
+            print(f"Socket error: {e}")
+            return
+
         self.listen_thread = threading.Thread(target=self.listen_for_messages, daemon=True)
         self.listen_thread.start()
 
@@ -34,7 +44,7 @@ class GameClient:
         while True:
             msg = self.recv_message()
             if msg is None:
-                print("Disconnected from server")
+                print("Disconnected from server (no message received).")
                 break
             self.handle_message(msg)
 
@@ -52,30 +62,29 @@ class GameClient:
             return None
 
     def send_message(self, msg_dict):
-        msg = json.dumps(msg_dict).encode('utf-8')
-        self.sock.sendall(len(msg).to_bytes(4, 'big'))
-        self.sock.sendall(msg)
+        try:
+            msg = json.dumps(msg_dict).encode('utf-8')
+            self.sock.sendall(len(msg).to_bytes(4, 'big'))
+            self.sock.sendall(msg)
+        except socket.error as e:
+            print(f"Error sending message: {e}")
 
     def handle_message(self, msg):
         action = msg.get('action')
         if action == 'ASSIGN_ROLE':
-            # We got our role from the server
             role = msg['role']
-            culprit_id = msg.get('culprit_id')  # only if witness
+            culprit_id = msg.get('culprit_id')
+            print(f"Received ASSIGN_ROLE: {role}, culprit_id: {culprit_id}")
             self.role_ui_callback(role, culprit_id)
         elif action == 'START_ROUND':
-            # Notify current UI about round start
-            # The UI classes should provide a method like `start_round(round_number)`
             round_num = msg['round_number']
             if hasattr(self.current_ui, 'start_round'):
                 self.current_ui.start_round(round_num)
         elif action == 'CLUE':
-            # Witness clue broadcast
             clue = msg['message']
             if hasattr(self.current_ui, 'display_clue'):
                 self.current_ui.display_clue(clue)
         elif action == 'ROUND_END':
-            # Update scores if needed
             if hasattr(self.current_ui, 'update_scores'):
                 self.current_ui.update_scores(msg['scores'])
         elif action == 'GAME_OVER':
@@ -86,18 +95,23 @@ class GameClient:
         self.current_ui = ui_instance
 
     def send_clue(self, clue):
-        # Called by witness UI when clue is submitted
         self.send_message({"action": "CLUE", "message": clue})
 
     def send_guess(self, guess_id):
-        # Called by detective UI when guess is submitted
         self.send_message({"action": "GUESS", "guess_id": guess_id})
 
 
 def start_server(num_players):
-    # Start the server in a separate process
-    # Requires that Main.py is set up as a server with TOTAL_PLAYERS = num_players
-    subprocess.Popen(["python", "ServerMain.py"])
+    # Use absolute path for ServerMain.py
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    server_script = os.path.join(script_dir, "ServerMain.py")
+
+    # Start the server in a new process
+    print("Starting server...")
+    process = subprocess.Popen([os.sys.executable, server_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    time.sleep(2)  # Give server some time to start listening
+    print("Server start attempted.")
 
 
 class MainUI:
@@ -106,7 +120,6 @@ class MainUI:
         self.root.title("Sketch Artist Game - Setup")
         self.client = None
 
-        # Host/Join Selection
         frame = tk.Frame(root, bg="white")
         frame.pack(padx=20, pady=20)
 
@@ -118,12 +131,10 @@ class MainUI:
         host_radio.pack(anchor='w')
         join_radio.pack(anchor='w')
 
-        # Number of players (if hosting)
         tk.Label(frame, text="Number of Players:", bg="white").pack()
         self.num_players_spin = tk.Spinbox(frame, from_=1, to=10, width=5)
         self.num_players_spin.pack()
 
-        # Host and Port for joining
         tk.Label(frame, text="Server Host (if joining):", bg="white").pack()
         self.host_entry = tk.Entry(frame)
         self.host_entry.insert(0, HOST)
@@ -143,42 +154,41 @@ class MainUI:
         host = self.host_entry.get()
         port = int(self.port_entry.get())
 
+        # Clear UI first, show a message
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        waiting_label = tk.Label(self.root, text="Starting...", font=("Helvetica", 18))
+        waiting_label.pack(pady=50)
+        self.root.update()
+
         if mode == "host":
-            # Start the server locally
             start_server(num_players)
-            # Wait a moment for the server to start (in production, check properly)
-            time.sleep(1)
-            # Connect as a client to the local server
+            # Increase wait time to ensure server is listening
+            time.sleep(3)
+
             self.client = GameClient(role_ui_callback=self.init_role_ui)
             self.client.connect_to_server(HOST, PORT)
         else:
-            # Join game as a client
             self.client = GameClient(role_ui_callback=self.init_role_ui)
             self.client.connect_to_server(host, port)
 
-        # Clear the setup UI
+        # Update waiting message
         for widget in self.root.winfo_children():
             widget.destroy()
         tk.Label(self.root, text="Waiting for role assignment...", font=("Helvetica", 18)).pack(pady=50)
 
     def init_role_ui(self, role, culprit_id):
-        # Clear the waiting screen
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        # Now based on the role, open the corresponding UI
-        # We'll pass a reference to the client so the UI can send messages
+        print(f"Initializing role UI for role: {role}")
         if role == 'witness':
             self.app = WitnessApp(self.root, on_clue_submit=self.client.send_clue)
             if culprit_id is not None:
-                # In a real implementation, you'd also have a way for the witness
-                # to know who the culprit is. The culprit_id would map to a player.
-                # This might require additional logic or a players list.
                 self.app.set_culprit_id(culprit_id)
         elif role == 'artist':
             self.app = NotepadApp(self.root)
         elif role == 'detective':
-            # Detective guesses might need to call self.client.send_guess(guess_id)
             self.app = DetectiveApp(self.root, on_guess_submit=self.client.send_guess)
         else:
             tk.Label(self.root, text=f"Unknown role: {role}", font=("Helvetica", 18), fg="red").pack(pady=50)
@@ -187,10 +197,7 @@ class MainUI:
         self.client.set_current_ui(self.app)
 
 
-# Run the Application
 if __name__ == "__main__":
-    import time  # Moved here to avoid issues if time wasn't imported above
-
     root = tk.Tk()
     root.geometry("800x600")
 
